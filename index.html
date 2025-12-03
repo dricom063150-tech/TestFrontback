@@ -168,11 +168,35 @@
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     const form = document.getElementById("opinion-form");
     const statusBox = document.getElementById("status");
+    const submitButton = form.querySelector('button[type="submit"]');
 
     const showStatus = (message, variant) => {
       statusBox.textContent = message;
       statusBox.className = `status ${variant}`;
       statusBox.style.display = "block";
+    };
+
+    const setSubmittingState = (isSubmitting) => {
+      submitButton.disabled = isSubmitting;
+      submitButton.textContent = isSubmitting ? "Envoi..." : "Envoyer";
+    };
+
+    const buildFriendlyError = (error) => {
+      if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+        return "Configuration manquante : vérifiez l'URL et la clé Supabase.";
+      }
+
+      const message = error?.message?.toLowerCase() ?? "";
+
+      if (message.includes("fetch") || message.includes("network")) {
+        return "Connexion au service Supabase impossible. Merci de vérifier vos identifiants API et votre connexion internet.";
+      }
+
+      if (message.includes("row-level security")) {
+        return "Impossible d'enregistrer : la politique de sécurité Supabase bloque l'insertion avec la clé anonyme.";
+      }
+
+      return "Une erreur est survenue lors de l'enregistrement. Merci de vérifier votre connexion et de réessayer.";
     };
 
     form.addEventListener("submit", async (event) => {
@@ -187,16 +211,26 @@
         return;
       }
 
-      const { error } = await supabaseClient.from("opinions").insert({ age, opinion });
+      setSubmittingState(true);
 
-      if (error) {
+      try {
+        const { error } = await supabaseClient
+          .from("opinions")
+          .insert([{ age, opinion }]);
+
+        if (error) {
+          throw error;
+        }
+
+        showStatus("Merci ! Votre réponse a bien été enregistrée.", "success");
+        form.reset();
+      } catch (error) {
         console.error("Supabase insert error", error);
-        showStatus("Une erreur est survenue. Merci de réessayer.", "error");
-        return;
-      }
 
-      showStatus("Merci ! Votre réponse a bien été enregistrée.", "success");
-      form.reset();
+        showStatus(buildFriendlyError(error), "error");
+      } finally {
+        setSubmittingState(false);
+      }
     });
   </script>
 </body>
