@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Votre avis</title>
+  <style>
+    :root {
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      color: #1f2933;
+      background-color: #f6f8fa;
+    }
+
+    body {
+      margin: 0;
+      display: flex;
+      min-height: 100vh;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+      padding: 32px;
+      max-width: 480px;
+      width: 100%;
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: 1.8rem;
+      color: #0f172a;
+    }
+
+    p {
+      margin-bottom: 24px;
+      line-height: 1.6;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+
+    input[type="number"] {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid #cbd5e1;
+      font-size: 1rem;
+      box-sizing: border-box;
+    }
+
+    fieldset {
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      padding: 16px;
+    }
+
+    legend {
+      padding: 0 8px;
+      font-weight: 700;
+    }
+
+    .choices {
+      display: flex;
+      gap: 12px;
+    }
+
+    .choices label {
+      margin: 0;
+      font-weight: 500;
+    }
+
+    button {
+      padding: 12px 18px;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(120deg, #2563eb, #5b21b6);
+      color: #ffffff;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.1s ease, box-shadow 0.2s ease;
+    }
+
+    button:hover {
+      box-shadow: 0 8px 18px rgba(37, 99, 235, 0.3);
+      transform: translateY(-1px);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    .helper {
+      font-size: 0.95rem;
+      color: #475569;
+      margin-top: -6px;
+    }
+  </style>
+</head>
+<body>
+  <main class="card" aria-labelledby="title">
+    <h1 id="title">Partagez votre avis</h1>
+    <p>Remplissez ce formulaire rapide pour nous indiquer votre âge et si votre opinion sur le sujet est positive ou négative.</p>
+    <form>
+      <div>
+        <label for="age">Âge</label>
+        <input id="age" name="age" type="number" min="0" max="120" required aria-describedby="age-help" />
+        <div class="helper" id="age-help">Indiquez votre âge en années.</div>
+      </div>
+
+      <fieldset>
+        <legend>Votre opinion</legend>
+        <div class="choices">
+          <div>
+            <input id="opinion-positive" name="opinion" type="radio" value="positive" required />
+            <label for="opinion-positive">Positive</label>
+          </div>
+          <div>
+            <input id="opinion-negative" name="opinion" type="radio" value="negative" required />
+            <label for="opinion-negative">Négative</label>
+          </div>
+        </div>
+      </fieldset>
+
+      <button type="submit">Envoyer</button>
+    </form>
+  </main>
+</body>
+</html>
