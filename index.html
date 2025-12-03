@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Votre avis</title>
+  <style>
+    :root {
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      color: #1f2933;
+      background-color: #f6f8fa;
+    }
+
+    body {
+      margin: 0;
+      display: flex;
+      min-height: 100vh;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+      padding: 32px;
+      max-width: 520px;
+      width: 100%;
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: 1.8rem;
+      color: #0f172a;
+    }
+
+    p {
+      margin-bottom: 24px;
+      line-height: 1.6;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+
+    input[type="number"] {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid #cbd5e1;
+      font-size: 1rem;
+      box-sizing: border-box;
+    }
+
+    fieldset {
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      padding: 16px;
+    }
+
+    legend {
+      padding: 0 8px;
+      font-weight: 700;
+    }
+
+    .choices {
+      display: flex;
+      gap: 12px;
+    }
+
+    .choices label {
+      margin: 0;
+      font-weight: 500;
+    }
+
+    button {
+      padding: 12px 18px;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(120deg, #2563eb, #5b21b6);
+      color: #ffffff;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.1s ease, box-shadow 0.2s ease;
+    }
+
+    button:hover {
+      box-shadow: 0 8px 18px rgba(37, 99, 235, 0.3);
+      transform: translateY(-1px);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    .helper {
+      font-size: 0.95rem;
+      color: #475569;
+      margin-top: -6px;
+    }
+
+    .status {
+      padding: 12px 14px;
+      border-radius: 10px;
+      font-weight: 600;
+      margin-top: 6px;
+      display: none;
+    }
+
+    .status.success {
+      background: #ecfdf3;
+      color: #027a48;
+      border: 1px solid #a6f4c5;
+    }
+
+    .status.error {
+      background: #fef2f2;
+      color: #b42318;
+      border: 1px solid #fda29b;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <main class="card" aria-labelledby="title">
+    <h1 id="title">Partagez votre avis</h1>
+    <p>Remplissez ce formulaire rapide pour nous indiquer votre âge et si votre opinion sur le sujet est positive ou négative.</p>
+    <form id="opinion-form">
+      <div>
+        <label for="age">Âge</label>
+        <input id="age" name="age" type="number" min="0" max="120" required aria-describedby="age-help" />
+        <div class="helper" id="age-help">Indiquez votre âge en années.</div>
+      </div>
+
+      <fieldset>
+        <legend>Votre opinion</legend>
+        <div class="choices">
+          <div>
+            <input id="opinion-positive" name="opinion" type="radio" value="positive" required />
+            <label for="opinion-positive">Positive</label>
+          </div>
+          <div>
+            <input id="opinion-negative" name="opinion" type="radio" value="negative" required />
+            <label for="opinion-negative">Négative</label>
+          </div>
+        </div>
+      </fieldset>
+
+      <button type="submit">Envoyer</button>
+      <div id="status" class="status" role="status" aria-live="polite"></div>
+    </form>
+  </main>
+
+  <script>
+    const SUPABASE_URL = "https://zcqpcijmnehddviuvfjj.supabase.co";
+    const SUPABASE_ANON_KEY =
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpjcXBjaWptbmVoZGR2aXV2ZmpqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ3OTAzNzAsImV4cCI6MjA4MDM2NjM3MH0.FSFZsuUOZuQq5noKsOc-MRkwYU_8OoW9zSYW3CVjjCQ";
+
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const form = document.getElementById("opinion-form");
+    const statusBox = document.getElementById("status");
+
+    const showStatus = (message, variant) => {
+      statusBox.textContent = message;
+      statusBox.className = `status ${variant}`;
+      statusBox.style.display = "block";
+    };
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      statusBox.style.display = "none";
+
+      const age = parseInt(form.age.value, 10);
+      const opinion = form.opinion.value;
+
+      if (Number.isNaN(age)) {
+        showStatus("Merci de saisir un âge valide.", "error");
+        return;
+      }
+
+      const { error } = await supabaseClient.from("opinions").insert({ age, opinion });
+
+      if (error) {
+        console.error("Supabase insert error", error);
+        showStatus("Une erreur est survenue. Merci de réessayer.", "error");
+        return;
+      }
+
+      showStatus("Merci ! Votre réponse a bien été enregistrée.", "success");
+      form.reset();
+    });
+  </script>
+</body>
+</html>
