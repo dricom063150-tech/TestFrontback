@@ -128,6 +128,7 @@
       border: 1px solid #fda29b;
     }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <main class="card" aria-labelledby="title">
@@ -160,59 +161,73 @@
   </main>
 
   <script>
-    const form = document.getElementById('opinion-form');
-    const statusBox = document.getElementById('status');
+    const SUPABASE_URL = "https://rndxoekajtzsipmqkwrs.supabase.co";
+    const SUPABASE_ANON_KEY =
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJuZHhvZWthanR6c2lwbXFrd3JzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ3OTEyNjgsImV4cCI6MjA4MDM2NzI2OH0.UsMLyjUIFYANJQ8IqkNMLAT23lZW65nSX4aa2-hlZbw";
+
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const form = document.getElementById("opinion-form");
+    const statusBox = document.getElementById("status");
     const submitButton = form.querySelector('button[type="submit"]');
 
     const showStatus = (message, variant) => {
       statusBox.textContent = message;
       statusBox.className = `status ${variant}`;
-      statusBox.style.display = 'block';
+      statusBox.style.display = "block";
     };
 
     const setSubmittingState = (isSubmitting) => {
       submitButton.disabled = isSubmitting;
-      submitButton.textContent = isSubmitting ? 'Envoi...' : 'Envoyer';
+      submitButton.textContent = isSubmitting ? "Envoi..." : "Envoyer";
     };
 
-    form.addEventListener('submit', async (event) => {
+    const buildFriendlyError = (error) => {
+      if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+        return "Configuration manquante : vérifiez l'URL et la clé Supabase.";
+      }
+
+      const message = error?.message?.toLowerCase() ?? "";
+
+      if (message.includes("fetch") || message.includes("network")) {
+        return "Connexion au service Supabase impossible. Merci de vérifier vos identifiants API et votre connexion internet.";
+      }
+
+      if (message.includes("row-level security")) {
+        return "Impossible d'enregistrer : la politique de sécurité Supabase bloque l'insertion avec la clé anonyme.";
+      }
+
+      return "Une erreur est survenue lors de l'enregistrement. Merci de vérifier votre connexion et de réessayer.";
+    };
+
+    form.addEventListener("submit", async (event) => {
       event.preventDefault();
-      statusBox.style.display = 'none';
+      statusBox.style.display = "none";
 
       const age = parseInt(form.age.value, 10);
       const opinion = form.opinion.value;
 
       if (Number.isNaN(age)) {
-        showStatus('Merci de saisir un âge valide.', 'error');
+        showStatus("Merci de saisir un âge valide.", "error");
         return;
       }
 
       setSubmittingState(true);
 
       try {
-        const response = await fetch('/api/opinions', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ age, opinion }),
-        });
+        const { error } = await supabaseClient
+          .from("opinions")
+          .insert([{ age, opinion }]);
 
-        const payload = await response.json().catch(() => ({}));
-
-        if (!response.ok) {
-          const message = payload?.error || "Une erreur est survenue lors de l'enregistrement.";
-          throw new Error(message);
+        if (error) {
+          throw error;
         }
 
-        showStatus('Merci ! Votre réponse a bien été enregistrée.', 'success');
+        showStatus("Merci ! Votre réponse a bien été enregistrée.", "success");
         form.reset();
       } catch (error) {
-        console.error('API insert error', error);
+        console.error("Supabase insert error", error);
 
-        const friendlyMessage = error?.message
-          ? error.message
-          : "Une erreur est survenue lors de l'enregistrement. Merci de vérifier votre connexion et de réessayer.";
-
-        showStatus(friendlyMessage, 'error');
+        showStatus(buildFriendlyError(error), "error");
       } finally {
         setSubmittingState(false);
       }
